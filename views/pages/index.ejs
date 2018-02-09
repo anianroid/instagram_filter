@@ -251,6 +251,7 @@
                 )
               }
             )
+            document.getElementById('images').innerHTML = '';
             document.getElementById('images').innerHTML = html;
             commonTags.filter((v,i) => commonTags.indexOf(v) == i)
             renderTags(commonTags);
