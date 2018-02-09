@@ -9,4 +9,7 @@ express()
   .set('view engine', 'ejs')
   .get('/', (req, res) => res.render('pages/index'))
   .get('/cool', (req, res) => res.send(cool()))
+  .get('/instagram', (req, res) => res.redirect(
+    'https://api.instagram.com/oauth/authorize/?client_id=fbb804594cf34b04ad987b77a38bfd5e&redirect_uri=http://localhost:5000/&response_type=token'
+  ))
   .listen(PORT, () => console.log(`Listening on ${ PORT }`))

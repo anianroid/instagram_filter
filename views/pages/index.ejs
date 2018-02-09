@@ -2,65 +2,108 @@
 <html>
 <head>
   <% include ../partials/header.ejs %>
+
+
+  <style type="text/css">
+    html, body {
+      font-family: sans-serif;
+      background: #ccc;
+    }
+    .container {
+      display: grid;
+      grid-gap : 3px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-auto-rows: 320px;
+      grid-auto-flow: dense;
+      width: 90%;
+    }
+
+    .container > div {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.4em;
+      border: 1px solid #f2f2f2;
+      background: #f2f2f2;
+    }
+    .container > div > img {
+      height: 100%;
+      width: 100%;
+      object-fit: cover;
+    }
+
+    .horizontal {
+    /*
+    Won't work for this case. Pushes all the divs with this class to the first column starting creating unexpected empty spaces
+      grid-column: 1 / span 2; 
+    */
+      grid-column: span 2;
+    }
+
+    .vertical {
+      grid-row: span 2;
+    }
+
+    .big {
+      grid-row: span 2;
+      grid-column: span 2;
+    }
+  </style>
+
+
 </head>
 
 <body>
 
-  <% include ../partials/nav.ejs %>
+<div class="container" id="demo"></div>
 
-<div class="jumbotron text-center">
-  <div class="container">
-    <a href="/" class="lang-logo">
-      <img src="/lang-logo.png">
-    </a>
-    <h1>Getting Started with Node on Heroku</h1>
-    <p>This is a sample Node application deployed to Heroku. It's a reasonably simple app - but a good foundation for understanding how to get the most out of the Heroku platform.</p>
-    <a type="button" class="btn btn-lg btn-default" href="https://devcenter.heroku.com/articles/getting-started-with-nodejs"><span class="glyphicon glyphicon-flash"></span> Getting Started with Node</a>
-    <a type="button" class="btn btn-lg btn-primary" href="https://github.com/heroku/node-js-getting-started"><span class="glyphicon glyphicon-download"></span> Source on GitHub</a>
-  </div>
-</div>
-<div class="container">
-  <div class="alert alert-info text-center" role="alert">
-    To deploy your own copy, and learn the fundamentals of the Heroku platform, head over to the <a href="https://devcenter.heroku.com/articles/getting-started-with-nodejs" class="alert-link">Getting Started with Node on Heroku</a> tutorial.
-  </div>
-  <hr>
-  <div class="row">
-    <div class="col-md-6">
-      <h3><span class="glyphicon glyphicon-info-sign"></span> How this sample app works</h3>
-      <ul>
-        <li>This app was deployed to Heroku, either using Git or by using <a href="https://github.com/heroku/node-js-getting-started">Heroku Button</a> on the repository.</li>
 
-        <li>When Heroku received the source code, it fetched all the dependencies in the <a href="https://github.com/heroku/node-js-getting-started/blob/master/package.json">package.json</a>, creating a deployable slug.</li>
-        <li>The platform then spins up a dyno, a lightweight container that provides an isolated environment in which the slug can be mounted and executed.</li>
-        <li>You can scale your app, manage it, and deploy over <a href="https://addons.heroku.com/">150 add-on services</a>, from the Dashboard or CLI.</li>
-      </ul>
-    </div>
-    <div class="col-md-6">
-      <h3><span class="glyphicon glyphicon-link"></span> Next Steps</h3>
-      <ul>
-        <li>If you are following the <a href="https://devcenter.heroku.com/articles/getting-started-with-nodejs">Getting Started</a> guide, then please head back to the tutorial and follow the next steps!</li>
-        <li>If you deployed this app by deploying the Heroku Button, then in a command line shell, run:</li>
-        <ul>
-          <li><code>git clone https://github.com/heroku/node-js-getting-started.git</code> - this will create a local copy of the source code for the app</li>
-          <li><code>cd node-js-getting-started</code> - change directory into the local source code repository</li>
-          <li><code>heroku git:remote -a &lt;your-app-name></code> - associate the Heroku app with the repository</li>
-          <li>You'll now be set up to run the app locally, or <a href="https://devcenter.heroku.com/articles/getting-started-with-nodejs#push-local-changes">deploy changes</a> to Heroku</li>
-        </ul>
-      </ul>
-      <h3><span class="glyphicon glyphicon-link"></span> Helpful Links</h3>
-      <ul>
-        <li><a href="https://www.heroku.com/home">Heroku</a></li>
-        <li><a href="https://devcenter.heroku.com/">Heroku Dev Center</a></li>
-        <li><a href="https://devcenter.heroku.com/articles/getting-started-with-nodejs">Getting Started with Node on Heroku</a></li>
-        <li><a href="https://devcenter.heroku.com/articles/deploying-nodejs">Deploying Node Apps on Heroku</a></li>
-      </ul>
-    </div>
-  </div> <!-- row -->
-   <div class="alert alert-info text-center" role="alert">
-    Please do work through the Getting Started guide, even if you do know how to build such an application.  The guide covers the basics of working with Heroku, and will familiarize you with all the concepts you need in order to build and deploy your own apps.
-  </div>
-</div>
+<script type="text/javascript" src="https://sdk.clarifai.com/js/clarifai-latest.js"></script>
 
+<script type="text/javascript">
+
+  // instantiate a new Clarifai app passing in your api key.
+  const app = new Clarifai.App({
+   apiKey: 'e4e46d81280a43c5960395474d8ecdfc'
+  });
+
+
+  (function() {
+    const access_token = window.location.href.split('access_token=')[1];
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      let images = [];
+      JSON.parse(this.response).data.filter(
+        (item) => {
+          images.push(item.images.standard_resolution.url);
+        }
+      )
+      let = data = [];
+      app.models.predict(Clarifai.GENERAL_MODEL, images).then(
+        function(response) {
+          response.outputs.map(
+            (output) => {
+              let tags = [];
+              output.data.concepts.map(
+                (concept) => {
+                  tags.push(concept.name);
+                }
+              )
+              data.push(Object.assign({}, {image: output.input.data.image.url, tags: tags}));
+            }
+          )
+          console.log(data);
+        },
+        function(err) {
+          console.error(err);
+        }
+      );
+      console.log(data);
+    };
+    xhttp.open("GET", "https://api.instagram.com/v1/users/self/media/recent/?access_token="+access_token, true);
+    xhttp.send();
+  })()
+</script>
 
 </body>
 </html>
