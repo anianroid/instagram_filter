@@ -48,6 +48,26 @@
       grid-row: span 2;
       grid-column: span 2;
     }
+    #tags {
+      border-bottom: 1px solid #000;
+    }
+    #tags > ul {
+      list-style: none;
+      overflow: auto;
+      white-space: nowrap;
+      margin-top: 1.5em;
+    }
+    #tags > ul > li {
+      display: inline-block;
+      padding: 1em;
+      cursor: pointer;
+      background-color: #fff;
+      margin: 1em;
+      font-size: 1.2em;
+    }
+    #tags > ul > li:hover {
+      background-color: #f2f2f2;
+    }
   </style>
 
 
@@ -55,18 +75,120 @@
 
 <body>
 
-<div class="container" id="demo"></div>
+  <div id="tags"></div>
+  <div class="container" id="images">
+  </div>
 
 
 <script type="text/javascript" src="https://sdk.clarifai.com/js/clarifai-latest.js"></script>
 
 <script type="text/javascript">
+  
+
+   // Warn if overriding existing method
+  if(Array.prototype.equals)
+    console.warn("Overriding existing Array.prototype.equals. Possible causes: New API defines the method, there's a framework conflict or you've got double inclusions in your code.");
+  // attach the .equals method to Array's prototype to call it on any array
+  Array.prototype.equals = function (array) {
+      // if the other array is a falsy value, return
+      if (!array)
+          return false;
+
+      // compare lengths - can save a lot of time 
+      if (this.length != array.length)
+          return false;
+
+      for (var i = 0, l=this.length; i < l; i++) {
+          // Check if we have nested arrays
+          if (this[i] instanceof Array && array[i] instanceof Array) {
+              // recurse into the nested arrays
+              if (!this[i].equals(array[i]))
+                  return false;       
+          }           
+          else if (this[i] != array[i]) { 
+              // Warning - two different object instances will never be equal: {x:20} != {x:20}
+              return false;   
+          }           
+      }       
+      return true;
+  }
+                                           
+  if(Array.prototype.contains)
+      console.warn("Overriding existing Array.prototype.contains. Possible causes: New API defines the method, there's a framework conflict or you've got double inclusions in your code.");
+  // attach the .contains method to Array's prototype to call it on any array
+  Array.prototype.contains = function (thing) {
+      // if the other array is a falsy value, return false
+      if (!this)
+          return false;
+      
+      //start by assuming the array doesn't contain the thing
+      var result = false;
+      for (var i = 0, l=this.length; i < l; i++) 
+        {
+        //if anything in the array is the thing then change our mind from before
+        
+        if (this[i] instanceof Array)
+          {if (this[i].equals(thing))
+            result = true;}
+          else
+            if (this[i]===thing)
+              result = true;
+        
+      
+        } 
+       //return the decision we left in the variable, result
+      return result;     
+  }
+    
+  //if(Array.prototype.indexOf)
+      //no warnings here because I'm intentionally overriding it, but it should do the same thing in all cases except nested arrays
+  // attach the .indexOf method to Array's prototype to call it on any array
+  Array.prototype.indexOf = function (thing) 
+    {
+      // if the other array is a falsy value, return -1
+      if (!this)
+          return -1;
+      
+      //start by assuming the array doesn't contain the thing
+      var result = -1;
+      for (var i = 0, l=this.length; i < l; i++) 
+        {
+        //if anything in the array is the thing then change our mind from before
+        if (this[i] instanceof Array)
+          if (this[i].equals(thing))
+            result = i;
+          else
+            if (this[i]===thing)
+              result = i;
+        
+      
+        } 
+       //return the decision we left in the variable, result
+      return result;
+  }
+</script>
+
+
+<script type="text/javascript">
+
+
+  function renderTags(tags) {
+    let html = '<ul>';
+    tags.forEach(
+      (tag) => {
+        html += '<li>'+tag+'</li>';
+      }
+    )
+    html += '</ul>';
+    document.getElementById('tags').innerHTML = html;
+  }
 
   // instantiate a new Clarifai app passing in your api key.
   const app = new Clarifai.App({
    apiKey: 'e4e46d81280a43c5960395474d8ecdfc'
   });
 
+  const commonTags = [];
 
   (function() {
     const access_token = window.location.href.split('access_token=')[1];
@@ -81,24 +203,40 @@
       let = data = [];
       app.models.predict(Clarifai.GENERAL_MODEL, images).then(
         function(response) {
-          response.outputs.map(
-            (output) => {
-              let tags = [];
-              output.data.concepts.map(
-                (concept) => {
-                  tags.push(concept.name);
-                }
-              )
-              data.push(Object.assign({}, {image: output.input.data.image.url, tags: tags}));
-            }
-          )
-          console.log(data);
+          if(response.outputs) {
+            response.outputs.map(
+              (output) => {
+                let tags = [];
+                output.data.concepts.map(
+                  (concept) => {
+                    tags.push(concept.name);
+                  }
+                )
+                data.push(Object.assign({}, {image: output.input.data.image.url, tags: tags}));
+              }
+            )
+            let html = '';
+            data.map( 
+              (item) => {
+                html += '<div><img src="'+item.image+'"/></div>';
+                item.tags.map(
+                  (tag) => {
+                    if(!commonTags.contains(tag)) {
+                      commonTags.push(tag);
+                    }
+                  }
+                )
+              }
+            )
+            document.getElementById('images').innerHTML = html;
+            commonTags.filter((v,i) => commonTags.indexOf(v) == i)
+            renderTags(commonTags);
+          }
         },
         function(err) {
           console.error(err);
         }
       );
-      console.log(data);
     };
     xhttp.open("GET", "https://api.instagram.com/v1/users/self/media/recent/?access_token="+access_token, true);
     xhttp.send();
