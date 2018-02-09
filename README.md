@@ -1,4 +1,4 @@
-Simple app for filtering instagram images.
+<h1>Simple app for filtering instagram images.</h1>
 
 
 <h2>Stack</h2>
