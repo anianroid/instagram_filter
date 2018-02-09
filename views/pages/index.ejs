@@ -171,12 +171,11 @@
 
 <script type="text/javascript">
 
-
   function renderTags(tags) {
     let html = '<ul>';
     tags.forEach(
       (tag) => {
-        html += '<li>'+tag+'</li>';
+        html += '<li data-filter="'+tag+'" onClick="filterResults(event)">'+tag+'</li>';
       }
     )
     html += '</ul>';
@@ -189,6 +188,29 @@
   });
 
   const commonTags = [];
+  const imageObjects = [];
+
+
+  function filterResults(e) {
+    let filter = e.target.dataset.filter;
+    let filteredImages = [];
+    imageObjects.filter(
+      (obj) => {
+        if(obj.tags.contains(filter)) {
+          filteredImages.push(obj.image);
+        }
+      }
+    )
+    let html = '';
+    filteredImages.map(
+      (image) => {
+        html += '<div><img src="'+image+'"/></div>';
+      }
+    )
+    document.getElementById('images').innerHTML = '';
+    document.getElementById('images').innerHTML = html;
+  }
+
 
   (function() {
     const access_token = window.location.href.split('access_token=')[1];
@@ -213,6 +235,7 @@
                   }
                 )
                 data.push(Object.assign({}, {image: output.input.data.image.url, tags: tags}));
+                imageObjects.push(Object.assign({}, {image: output.input.data.image.url, tags: tags}));
               }
             )
             let html = '';
